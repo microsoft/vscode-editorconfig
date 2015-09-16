@@ -1,0 +1,14 @@
+{
+	"pluginId": "vscode.editorconfig",
+	"mainModule": "./out/index",
+	"contributes": {
+		"commands": [{
+			"command": "vscode.editorconfig",
+			"title": "EditorConfig: Start"
+		},
+        {
+			"command": "vscode.generateeditorconfig",
+			"title": "EditorConfig: Generate"
+		}]
+	}
+}
