@@ -44,7 +44,7 @@ function startEditorConfig() {
                         
                             // initialize our editor options with the current settings                     
                             let opts:vscode.EditorOptions = {useSpaces: editor_insertSpaces, 
-                                                            tabSize: editor_tabSize};
+                                                               tabSize: editor_tabSize};
                                                             
                             // if editorconfig properties exist, use them otherwise keep defaults
                             // useSpaces must be converted 'tab' -> false, 'space' -> true
@@ -60,10 +60,11 @@ function startEditorConfig() {
                             e.updateOptions(opts);
     
                         },
-                    reason => {
-                        // we didnt get our editor configuration, bail out
-                        Promise.reject("Failed to load editor configuration");
-                    });
+                        reason => {
+                            // we didnt get our editor configuration information, bail out
+                            Promise.reject("Failed to load editor configuration");
+                        }
+                    );
                 });
         });
         
@@ -84,22 +85,18 @@ function generateEditorConfig() {
    
    const configFile: string = vscode.workspace.getPath() + '/.editorconfig';
 
-   fs.exists(configFile, exists => {
-       if (exists) {
-           vscode.shell.showInformationMessage("An .editorconfig file already exists in this folder.");
-           return;
-       }
-       
-       
-   });
-   
-                       // get our settings for insertSpaces and tabSize (all i can get right now)
-                    // vscode.Services.ConfigurationService.loadConfiguration("editor").then(value => {
-                    //     editor_insertSpaces = value.insertSpaces;  // auto, true, false
-                    //     editor_tabSize = value.tabSize; //auto, 2, 4, 6, ...
-                    
-                    // // is this right?
-                    // }).then(value => {
+   fs.exists(configFile, 
+        exists => {
+            if (exists) {
+                vscode.shell.showInformationMessage("An .editorconfig file already exists in this folder.");
+                return;
+            }
+        }
+    );
+    
+    let opts:vscode.EditorOptions; //= vscode.Editor.getOptions();
+
+    
                         
                     //     // initialize our editor options with the current settings                     
                     //     let opts:vscode.EditorOptions = {useSpaces: editor_insertSpaces, 
