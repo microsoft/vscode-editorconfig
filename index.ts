@@ -115,7 +115,7 @@ function generateEditorConfig() {
                     //     // update our editor
                     //     e.updateOptions(opts);
 
-                    });
+}
 
     // const configSvcs = {
     //     editor: vscode.Services.Configuration.get("editor");
@@ -159,5 +159,3 @@ function generateEditorConfig() {
     //         vscode.notifications.addError('An .editorconfig file already exists in your workspace root.');
     //     }
     // });
-}
-
