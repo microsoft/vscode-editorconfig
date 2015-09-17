@@ -37,37 +37,40 @@ function startEditorConfig() {
                     }
                     
                     // get our settings for insertSpaces and tabSize (all i can get right now)
-                    vscode.Services.ConfigurationService.loadConfiguration("editor").then(value => {
-                        editor_insertSpaces = value.insertSpaces;  // auto, true, false
-                        editor_tabSize = value.tabSize; //auto, 2, 4, 6, ...
-                    
-                        // initialize our editor options with the current settings                     
-                        let opts:vscode.EditorOptions = {useSpaces: editor_insertSpaces, 
-                                                           tabSize: editor_tabSize};
-                                                           
-                        // if editorconfig properties exist, use them otherwise keep defaults
-                        // useSpaces must be converted 'tab' -> false, 'space' -> true
-                        opts.useSpaces = config.indent_style ? (config.indent_style === 'tab' ? false : true) : editor_insertSpaces;
-                        opts.tabSize = config.indent_size ? config.indent_size : editor_tabSize;
+                    vscode.Services.ConfigurationService.loadConfiguration("editor").then(
+                        value => {
+                            editor_insertSpaces = value.insertSpaces;  // auto, true, false
+                            editor_tabSize = value.tabSize; //auto, 2, 4, 6, ...
                         
-                        // TODO: set these properties when they become available!                        
-                        // config.charset
-                        // config.end_of_line
-                        // config.trim_trailing_whitespace
-                                                
-                        // update our editor
-                        e.updateOptions(opts);
-
+                            // initialize our editor options with the current settings                     
+                            let opts:vscode.EditorOptions = {useSpaces: editor_insertSpaces, 
+                                                            tabSize: editor_tabSize};
+                                                            
+                            // if editorconfig properties exist, use them otherwise keep defaults
+                            // useSpaces must be converted 'tab' -> false, 'space' -> true
+                            opts.useSpaces = config.indent_style ? (config.indent_style === 'tab' ? false : true) : editor_insertSpaces;
+                            opts.tabSize = config.indent_size ? config.indent_size : editor_tabSize;
+                            
+                            // TODO: set these properties when they become available!                        
+                            // config.charset
+                            // config.end_of_line
+                            // config.trim_trailing_whitespace
+                                                    
+                            // update our editor
+                            e.updateOptions(opts);
+    
+                        },
+                    reason => {
+                        // we didnt get our editor configuration, bail out
+                        Promise.reject("Failed to load editor configuration");
                     });
-
                 });
         });
         
-        // clean up
+        // clean up - do i need to dispose this?
         //subscription.dispose();
         
     });
-    
 }
 
 function generateEditorConfig() {
