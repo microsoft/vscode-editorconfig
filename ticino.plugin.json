@@ -1,6 +1,6 @@
 {
 	"pluginId": "vscode.editorconfigextension",
-	"mainModule": "./out/index",
+	"mainModule": "./out/editorConfigMain",
 	"contributes": {
 		"commands": [{
 			"command": "vscode.editorconfig",
