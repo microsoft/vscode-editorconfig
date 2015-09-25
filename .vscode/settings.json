@@ -4,5 +4,6 @@
 		"out": false
 	},
 	"editor.tabSize": 4,
-	"editor.insertSpaces": true
+	"editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true
 }

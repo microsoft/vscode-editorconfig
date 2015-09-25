@@ -1,4 +1,19 @@
 {
+    "name":	 "editorconfig",
+    "activationEvents": ["workspaceContains:.editorconfig"],
+    "version": "0.1.0",
+    "engines": { "vscode": "*" },
+    "main": "./out/editorConfigMain",
+    "contributes": {
+        "commands": [{
+            "command": "vscode.editorconfig",
+            "title": "EditorConfig: Start"
+        },
+        {
+            "command": "vscode.generateeditorconfig",
+            "title": "EditorConfig: Generate"
+        }]
+    },
     "dependencies": {
         "editorconfig": "*"
     }
