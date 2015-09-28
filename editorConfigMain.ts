@@ -1,11 +1,6 @@
-import * as vscode from 'vscode';
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
-
-import window = vscode.window;
-import workspace = vscode.workspace;
-import EditorOptions = vscode.EditorOptions;
-import Document = vscode.Document;
+import {commands, extensions, window, workspace, TextEditorOptions, TextDocument} from 'vscode';
 
 export function activate(): void {
 
@@ -16,10 +11,10 @@ export function activate(): void {
     // is loaded while i have open files
 
     // This is just temporary, to get the extension activated
-    vscode.commands.registerCommand('vscode.editorconfig', () => { /*nothing*/ });
+    commands.registerCommand('vscode.editorconfig', () => { /*nothing*/ });
 
     // register a command handler to generatoe a .editorconfig file
-    vscode.commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
+    commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
 }
 
 /**
@@ -33,10 +28,10 @@ class DocumentWatcher {
 
     constructor() {
         // Listen for new documents being openend
-        workspace.onDidAddDocument((document) => this._onDidOpenDocument(document));
+        workspace.onDidOpenTextDocument((document) => this._onDidOpenDocument(document));
 
         // Listen for saves to ".editorconfig" files and rebuild the map
-        workspace.onDidSaveDocument((savedDocument) => {
+        workspace.onDidSaveTextDocument((savedDocument) => {
             if (/\.editorconfig$/.test(savedDocument.getUri().fsPath)) {
                 // Saved an .editorconfig file => rebuild map entirely
                 this._rebuildConfigMap();
@@ -47,16 +42,17 @@ class DocumentWatcher {
         this._rebuildConfigMap();
     }
 
-    public getSettingsForDocument(document:Document): editorconfig.knownProps {
+    public getSettingsForDocument(document:TextDocument): editorconfig.knownProps {
         return this._documentToConfigMap[document.getUri().toString()];
     }
 
     private _rebuildConfigMap(): void {
         this._documentToConfigMap = {};
-        workspace.getAllDocuments().forEach((document) => this._onDidOpenDocument(document));
+        workspace.getTextDocuments().forEach((document) => this._onDidOpenDocument(document));
     }
 
-    private _onDidOpenDocument(document:Document): void {
+    private _onDidOpenDocument(document:TextDocument): void {
+        console.log('_onDidOpenDocument: ' + document.getUri().fsPath);
         if (document.isUntitled()) {
             // Does not have a fs path
             return;
@@ -85,10 +81,10 @@ class TextEditorWatcher {
                 return;
             }
 
-            let doc = textEditor.getDocument();
+            let doc = textEditor.getTextDocument();
             let config = this._documentWatcher.getSettingsForDocument(doc);
 
-            if (Object.keys(config).length === 0) {
+            if (!config) {
                 // no configuration found for this file
                 return;
             }
@@ -97,7 +93,7 @@ class TextEditorWatcher {
             let currentSettings = textEditor.getOptions();
 
             // convert editorsettings values to vscode editor options
-            let opts: EditorOptions = {
+            let opts: TextEditorOptions = {
                 insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : currentSettings.insertSpaces,
                 tabSize: config.indent_size ? config.indent_size : currentSettings.tabSize
             };
@@ -119,16 +115,16 @@ function generateEditorConfig() {
     // pull editor settings directly, because i dont know what 'auto' actuall is
     // would like to open .editorconfig if created OR if one exists in workspace already
 
-    let configFile: string = vscode.workspace.getPath();
+    let configFile: string = workspace.getPath();
 
     if (configFile === null) {
-        vscode.window.showInformationMessage("Please open a folder before generating an .editorconfig file");
+        window.showInformationMessage("Please open a folder before generating an .editorconfig file");
         return;
     } else {
         configFile = configFile + '/.editorconfig';
     }
 
-    vscode.extensions.getConfigurationMemento('editor').getValues(<any>{}).then((value) => {
+    extensions.getConfigurationMemento('editor').getValues(<any>{}).then((value) => {
         let indent_style: string = 'tab';
         let indent_size: string = '4';
 
@@ -164,13 +160,13 @@ indent_size = ${indent_size}
 
         fs.exists(configFile, (exists) => {
             if (exists) {
-                vscode.window.showInformationMessage('An .editorconfig file already exists in your workspace.');
+                window.showInformationMessage('An .editorconfig file already exists in your workspace.');
                 return;
             }
 
             fs.writeFile(configFile, fileContents, err => {
                 if (err) {
-                    vscode.window.showErrorMessage(err.toString());
+                    window.showErrorMessage(err.toString());
                     return;
                 }
             });
