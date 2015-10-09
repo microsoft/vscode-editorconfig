@@ -1,19 +1,16 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
 {
 	"version": "0.1.0",
 	"configurations": [
 		{
 			"name": "Launch Extension",
 			"type": "extensionHost",
-			// path to VSCode executable
 			"runtimeExecutable": "${execPath}",
-			// force VSCode to create a new window and pass this project as an additonal plugin location
-			// "args": [ "/Users/chris/src/monaco", "--new-window", "--extensionDevelopmentWorkspacePath=${workspaceRoot}" ],
-			// "args": [ "--new-window", "--extensionDevelopmentWorkspacePath=${workspaceRoot}", "/Users/chris/src/test/testEC"],
-			"args": [ "--new-window", "--extensionDevelopmentPath=${workspaceRoot}"],
+			"args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
 			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outDir": "out",
-			"task": "tsc"
+			"preLaunchTask": "npm"
 		}
 	]
 }

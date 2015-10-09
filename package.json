@@ -1,5 +1,6 @@
 {
     "name":	 "editorconfig",
+    "publisher": "vscode",
     "activationEvents": ["workspaceContains:.editorconfig"],
     "version": "0.1.0",
     "engines": { "vscode": "*" },
@@ -16,5 +17,12 @@
     },
     "dependencies": {
         "editorconfig": "*"
-    }
+    },
+    "devDependencies": {
+        "vscode": "*"
+    },
+    "scripts": {
+		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
+	}
 }

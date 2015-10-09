@@ -1,17 +1,14 @@
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
-import {commands, extensions, window, workspace, TextEditorOptions, TextDocument} from 'vscode';
+import {commands, extensions, window, workspace, TextEditorOptions, TextDocument, Disposable} from 'vscode';
 
-export function activate(): void {
+export function activate(disposables: Disposable[]): void {
 
-    let textEditorWatcher = new TextEditorWatcher(new DocumentWatcher());
+    let documentWatcher = new DocumentWatcher();
+    let textEditorWatcher = new TextEditorWatcher(documentWatcher);
 
-    // hook into the "editor open" event and apply .editorconfig files on that document
-    // i want this to apply for all open editors as well as any new editors, in case my extension
-    // is loaded while i have open files
-
-    // This is just temporary, to get the extension activated
-    commands.registerCommand('vscode.editorconfig', () => { /*nothing*/ });
+    disposables.push(documentWatcher);
+    disposables.push(textEditorWatcher);
 
     // register a command handler to generatoe a .editorconfig file
     commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
@@ -22,46 +19,53 @@ export function activate(): void {
  */
 class DocumentWatcher {
 
-    private _documentToConfigMap: {
-        [uri:string]: editorconfig.knownProps;
-    };
+    private _documentToConfigMap: { [uri: string]: editorconfig.knownProps };
+    private _disposable: Disposable;
 
     constructor() {
+
+        let subscriptions: Disposable[] = []
+
         // Listen for new documents being openend
-        workspace.onDidOpenTextDocument((document) => this._onDidOpenDocument(document));
+        workspace.onDidOpenTextDocument(this._onDidOpenDocument, this, subscriptions);
 
         // Listen for saves to ".editorconfig" files and rebuild the map
-        workspace.onDidSaveTextDocument((savedDocument) => {
-            if (/\.editorconfig$/.test(savedDocument.getUri().fsPath)) {
+        workspace.onDidSaveTextDocument(savedDocument => {
+            if (/\.editorconfig$/.test(savedDocument.getPath())) {
                 // Saved an .editorconfig file => rebuild map entirely
                 this._rebuildConfigMap();
             }
-        });
+        }, undefined, subscriptions);
+
+        // dispose event subscriptons upon disposal
+        this._disposable = Disposable.of(...subscriptions);
 
         // Build the map (cover the case that documents were opened before my activation)
         this._rebuildConfigMap();
     }
 
-    public getSettingsForDocument(document:TextDocument): editorconfig.knownProps {
-        return this._documentToConfigMap[document.getUri().toString()];
+    public dispose(): void {
+        this._disposable.dispose();
+    }
+
+    public getSettingsForDocument(document: TextDocument): editorconfig.knownProps {
+        return this._documentToConfigMap[document.getPath()];
     }
 
     private _rebuildConfigMap(): void {
         this._documentToConfigMap = {};
-        workspace.getTextDocuments().forEach((document) => this._onDidOpenDocument(document));
+        workspace.getTextDocuments().forEach(document => this._onDidOpenDocument(document));
     }
 
-    private _onDidOpenDocument(document:TextDocument): void {
-        console.log('_onDidOpenDocument: ' + document.getUri().fsPath);
+    private _onDidOpenDocument(document: TextDocument): void {
         if (document.isUntitled()) {
             // Does not have a fs path
             return;
         }
 
-        let uri = document.getUri();
-
-        editorconfig.parse(uri.fsPath).then((config:editorconfig.knownProps) => {
-            this._documentToConfigMap[uri.toString()] = config;
+        let path = document.getPath();
+        editorconfig.parse(path).then((config: editorconfig.knownProps) => {
+            this._documentToConfigMap[path] = config;
         });
     }
 }
@@ -71,11 +75,12 @@ class DocumentWatcher {
  */
 class TextEditorWatcher {
 
-    private _documentWatcher:DocumentWatcher;
+    private _documentWatcher: DocumentWatcher;
+    private _disposable: Disposable;
 
-    constructor(documentWatcher:DocumentWatcher) {
+    constructor(documentWatcher: DocumentWatcher) {
         this._documentWatcher = documentWatcher;
-        window.onDidChangeActiveTextEditor((textEditor) => {
+        this._disposable = window.onDidChangeActiveTextEditor((textEditor) => {
             if (!textEditor) {
                 // No more open editors
                 return;
@@ -98,10 +103,14 @@ class TextEditorWatcher {
                 tabSize: config.indent_size ? config.indent_size : currentSettings.tabSize
             };
 
-            window.setStatusBarMessage('EditorConfig: ' + config.indent_style + ' ' + config.indent_size);
+            window.setStatusBarMessage('EditorConfig: ' + config.indent_style + ' ' + config.indent_size, 1500);
 
             textEditor.setOptions(opts);
         });
+    }
+
+    public dispose() {
+        this._disposable.dispose();
     }
 }
 
@@ -151,7 +160,7 @@ function generateEditorConfig() {
         }
 
         const fileContents =
-`root = true
+            `root = true
 
 [*]
 indent_style = ${indent_style}
