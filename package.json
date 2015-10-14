@@ -6,10 +6,7 @@
     "engines": { "vscode": "*" },
     "main": "./out/editorConfigMain",
     "contributes": {
-        "commands": [{
-            "command": "vscode.editorconfig",
-            "title": "EditorConfig: Start"
-        },
+        "commands": [
         {
             "command": "vscode.generateeditorconfig",
             "title": "EditorConfig: Generate"
