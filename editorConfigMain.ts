@@ -1,23 +1,29 @@
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
-import {commands, extensions, window, workspace, TextEditorOptions, TextDocument, Disposable} from 'vscode';
+import {commands, window, workspace, ExtensionContext, TextEditorOptions, TextEditor, TextDocument, Disposable} from 'vscode';
 
-export function activate(disposables: Disposable[]): void {
+export function activate(ctx: ExtensionContext): void {
 
     let documentWatcher = new DocumentWatcher();
-    let textEditorWatcher = new TextEditorWatcher(documentWatcher);
 
-    disposables.push(documentWatcher);
-    disposables.push(textEditorWatcher);
+    ctx.subscriptions.push(documentWatcher);
+    ctx.subscriptions.push(window.onDidChangeActiveTextEditor((textEditor) => {
+        applyEditorConfigToTextEditor(textEditor, documentWatcher);
+    }));
+    applyEditorConfigToTextEditor(window.activeTextEditor, documentWatcher);
 
     // register a command handler to generatoe a .editorconfig file
     commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
 }
 
+interface IEditorConfigProvider {
+    getSettingsForDocument(document: TextDocument): editorconfig.knownProps;
+}
+
 /**
  * Listens to vscode document open and maintains a map (Document => editor config settings)
  */
-class DocumentWatcher {
+class DocumentWatcher implements IEditorConfigProvider {
 
     private _documentToConfigMap: { [uri: string]: editorconfig.knownProps };
     private _disposable: Disposable;
@@ -27,18 +33,18 @@ class DocumentWatcher {
         let subscriptions: Disposable[] = []
 
         // Listen for new documents being openend
-        workspace.onDidOpenTextDocument(this._onDidOpenDocument, this, subscriptions);
+        subscriptions.push(workspace.onDidOpenTextDocument((doc) => this._onDidOpenDocument(doc)));
 
         // Listen for saves to ".editorconfig" files and rebuild the map
-        workspace.onDidSaveTextDocument(savedDocument => {
-            if (/\.editorconfig$/.test(savedDocument.getPath())) {
+        subscriptions.push(workspace.onDidSaveTextDocument(savedDocument => {
+            if (/\.editorconfig$/.test(savedDocument.fileName)) {
                 // Saved an .editorconfig file => rebuild map entirely
                 this._rebuildConfigMap();
             }
-        }, undefined, subscriptions);
+        }));
 
         // dispose event subscriptons upon disposal
-        this._disposable = Disposable.of(...subscriptions);
+        this._disposable = Disposable.from(...subscriptions);
 
         // Build the map (cover the case that documents were opened before my activation)
         this._rebuildConfigMap();
@@ -49,95 +55,112 @@ class DocumentWatcher {
     }
 
     public getSettingsForDocument(document: TextDocument): editorconfig.knownProps {
-        return this._documentToConfigMap[document.getPath()];
+        return this._documentToConfigMap[document.fileName];
     }
 
     private _rebuildConfigMap(): void {
         this._documentToConfigMap = {};
-        workspace.getTextDocuments().forEach(document => this._onDidOpenDocument(document));
+        workspace.textDocuments.forEach(document => this._onDidOpenDocument(document));
     }
 
     private _onDidOpenDocument(document: TextDocument): void {
-        if (document.isUntitled()) {
+        if (document.isUntitled) {
             // Does not have a fs path
             return;
         }
 
-        let path = document.getPath();
+        let path = document.fileName;
         editorconfig.parse(path).then((config: editorconfig.knownProps) => {
+            // console.log('storing ' + path + ' to ' + JSON.stringify(config, null, '\t'));
             this._documentToConfigMap[path] = config;
+
+            applyEditorConfigToTextEditor(window.activeTextEditor, this);
         });
     }
+}
+
+function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorConfigProvider): void {
+    if (!textEditor) {
+        // No more open editors
+        return;
+    }
+
+    let doc = textEditor.document;
+    let editorconfig = provider.getSettingsForDocument(doc);
+
+    if (!editorconfig) {
+        // no configuration found for this file
+        return;
+    }
+
+    let newOptions = Utils.fromEditorConfig(editorconfig, textEditor.options.insertSpaces, textEditor.options.tabSize);
+
+    // console.log('setting ' + textEditor.document.fileName + ' to ' + JSON.stringify(newOptions, null, '\t'));
+
+    window.setStatusBarMessage('EditorConfig: ' + newOptions.insertSpaces + ' ' + newOptions.tabSize, 1500);
+
+    textEditor.options = newOptions;
 }
 
 /**
- * Listens to active text editor and applies editor config settings
+ * Generate an .editorconfig file in the root of the workspace based on the current vscode settings.
  */
-class TextEditorWatcher {
-
-    private _documentWatcher: DocumentWatcher;
-    private _disposable: Disposable;
-
-    constructor(documentWatcher: DocumentWatcher) {
-        this._documentWatcher = documentWatcher;
-        this._disposable = window.onDidChangeActiveTextEditor((textEditor) => {
-            if (!textEditor) {
-                // No more open editors
-                return;
-            }
-
-            let doc = textEditor.getTextDocument();
-            let config = this._documentWatcher.getSettingsForDocument(doc);
-
-            if (!config) {
-                // no configuration found for this file
-                return;
-            }
-
-            // get current settings
-            let currentSettings = textEditor.getOptions();
-
-            // convert editorsettings values to vscode editor options
-            let opts: TextEditorOptions = {
-                insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : currentSettings.insertSpaces,
-                tabSize: config.indent_size ? config.indent_size : currentSettings.tabSize
-            };
-
-            window.setStatusBarMessage('EditorConfig: ' + config.indent_style + ' ' + config.indent_size, 1500);
-
-            textEditor.setOptions(opts);
-        });
-    }
-
-    public dispose() {
-        this._disposable.dispose();
-    }
-}
-
 function generateEditorConfig() {
-
-    // generate a .editorconfig file in the root of the workspace
-    // based on the current editor settings and buffer properties
-
-    // WANTS
-    // cycle through all open *documents* and create a section for each type
-    // pull editor settings directly, because i dont know what 'auto' actuall is
-    // would like to open .editorconfig if created OR if one exists in workspace already
-
-    let configFile: string = workspace.getPath();
-
-    if (configFile === null) {
+    if (!workspace.rootPath) {
         window.showInformationMessage("Please open a folder before generating an .editorconfig file");
         return;
-    } else {
-        configFile = configFile + '/.editorconfig';
     }
 
-    extensions.getConfigurationMemento('editor').getValues(<any>{}).then((value) => {
-        let indent_style: string = 'tab';
-        let indent_size: string = '4';
+    let editorConfigurationNode = workspace.getConfiguration('editor');
+    let {indent_style, indent_size} = Utils.toEditorConfig(
+        editorConfigurationNode.get<string | boolean>('insertSpaces'),
+        editorConfigurationNode.get<string | number>('tabSize')
+    );
 
-        switch (value.insertSpaces) {
+    const fileContents =
+        `root = true
+
+[*]
+indent_style = ${indent_style}
+indent_size = ${indent_size}
+`;
+
+    let editorconfigFile = workspace.rootPath + '/.editorconfig';
+    fs.exists(editorconfigFile, (exists) => {
+        if (exists) {
+            window.showInformationMessage('An .editorconfig file already exists in your workspace.');
+            return;
+        }
+
+        fs.writeFile(editorconfigFile, fileContents, err => {
+            if (err) {
+                window.showErrorMessage(err.toString());
+                return;
+            }
+        });
+    });
+}
+
+export class Utils {
+
+    /**
+     * Convert .editorsconfig values to vscode editor options
+     */
+    public static fromEditorConfig(config:editorconfig.knownProps, defaultInsertSpaces:boolean, defaultTabSize:number): TextEditorOptions {
+        return {
+            insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : defaultInsertSpaces,
+            tabSize: config.indent_size ? config.indent_size : defaultTabSize
+        };
+    }
+
+    /**
+     * Convert vscode editor options to .editorsconfig values
+     */
+    public static toEditorConfig(configuredInsertSpaces:boolean|string, configuredTabSize:number|string) {
+        let indent_style = 'tab';
+        let indent_size = '4';
+
+        switch (configuredInsertSpaces) {
             case true:
                 indent_style = 'space';
                 break;
@@ -145,43 +168,17 @@ function generateEditorConfig() {
                 indent_style = 'tab';
                 break;
             case 'auto':
-                // this is wrong!!
-                indent_style = 'space';
-                break;
-
-            default:
+                indent_style = 'tab';
                 break;
         }
 
-        if (value.tabSize === 'auto') {
-            indent_size = '4';  // this is wrong!
-        } else {
-            indent_size = value.tabSize;
+        if (configuredTabSize !== 'auto') {
+            indent_size = String(configuredTabSize);
         }
 
-        const fileContents =
-            `root = true
-
-[*]
-indent_style = ${indent_style}
-indent_size = ${indent_size}
-`;
-
-        fs.exists(configFile, (exists) => {
-            if (exists) {
-                window.showInformationMessage('An .editorconfig file already exists in your workspace.');
-                return;
-            }
-
-            fs.writeFile(configFile, fileContents, err => {
-                if (err) {
-                    window.showErrorMessage(err.toString());
-                    return;
-                }
-            });
-        });
-
-    }, (reason) => {
-        console.log('editorConfig error: ' + reason);
-    });
+        return {
+            indent_style: indent_style,
+            indent_size: indent_size
+        };
+    }
 }

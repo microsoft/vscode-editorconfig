@@ -1,24 +1,33 @@
 {
-    "name":	 "editorconfig",
-    "publisher": "vscode",
-    "activationEvents": ["workspaceContains:.editorconfig"],
-    "version": "0.1.0",
-    "engines": { "vscode": "*" },
-    "main": "./out/editorConfigMain",
-    "contributes": {
-        "commands": [
-        {
-            "command": "vscode.generateeditorconfig",
-            "title": "EditorConfig: Generate"
-        }]
-    },
-    "dependencies": {
-        "editorconfig": "*"
-    },
-    "devDependencies": {
-        "vscode": "*"
-    },
-    "scripts": {
+	"name": "editorconfig",
+	"description": "Basic support for .editorconfig",
+	"publisher": "vscode",
+	"version": "0.1.0",
+	"engines": {
+		"vscode": "0.10.x"
+	},
+	"categories": [
+		"Others"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./out/editorConfigMain",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscode.generateeditorconfig",
+				"title": "EditorConfig: Generate"
+			}
+		]
+	},
+	"dependencies": {
+		"editorconfig": "*"
+	},
+	"devDependencies": {
+		"vscode": "0.10.x"
+	},
+	"scripts": {
 		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
 	}
