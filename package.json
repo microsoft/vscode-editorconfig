@@ -1,8 +1,9 @@
 {
-	"name": "editorconfig",
-	"description": "Basic support for .editorconfig",
+	"name": "vscodeEditorConfig",
+	"description": "Editor Config Support for Visual Studio Code",
 	"publisher": "vscode",
 	"version": "0.1.0",
+	"icon": "./EditorConfig_icon.png",
 	"engines": {
 		"vscode": "0.10.x"
 	},
