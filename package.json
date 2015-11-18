@@ -11,9 +11,9 @@
 	"author": "Microsoft Corporation",
 	"license": "MIT",
 	"categories": [
-		"Others"
+		"Other"
 	],
-		"homepage": "https://github.com/Microsoft/vscode-editorconfig/blob/master/README.md",
+	"homepage": "https://github.com/Microsoft/vscode-editorconfig/blob/master/README.md",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Microsoft/vscode-editorconfig.git"
@@ -28,7 +28,7 @@
 	"activationEvents": [
 		"*"
 	],
-	"main": "./out/editorConfigMain",
+	"main": "./out/src/editorConfigMain",
 	"contributes": {
 		"commands": [
 			{
@@ -41,6 +41,7 @@
 		"editorconfig": "*"
 	},
 	"devDependencies": {
+		"typescript": "^1.6.2",
 		"vscode": "0.10.x"
 	},
 	"scripts": {
