@@ -1,15 +1,30 @@
 {
 	"name": "vscodeEditorConfig",
+	"displayname": "Editor Config for VS Code",
 	"description": "Editor Config Support for Visual Studio Code",
-	"publisher": "vscode",
+	"publisher": "chrisdias",
 	"version": "0.1.0",
 	"icon": "./EditorConfig_icon.png",
 	"engines": {
 		"vscode": "0.10.x"
 	},
+	"author": "Microsoft Corporation"
+	"license": "MIT",
 	"categories": [
 		"Others"
 	],
+		"homepage": "https://github.com/Microsoft/vscode-editorconfig/blob/master/README.md",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-editorconfig.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Microsoft/vscode-editorconfig/issues"
+	},
+	"galleryBanner": {
+		"color": "#37699A",
+		"theme": "dark"
+	},
 	"activationEvents": [
 		"*"
 	],
