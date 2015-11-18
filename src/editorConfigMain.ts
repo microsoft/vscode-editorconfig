@@ -97,7 +97,7 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
 
     // console.log('setting ' + textEditor.document.fileName + ' to ' + JSON.stringify(newOptions, null, '\t'));
 
-    window.setStatusBarMessage('EditorConfig: ' + newOptions.insertSpaces + ' ' + newOptions.tabSize, 1500);
+    window.setStatusBarMessage('EditorConfig: ' + (newOptions.insertSpaces ? "Spaces:" : "Tabs:") + ' ' + newOptions.tabSize, 1500);
 
     textEditor.options = newOptions;
 }

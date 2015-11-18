@@ -38,7 +38,7 @@
 		]
 	},
 	"dependencies": {
-		"editorconfig": "*"
+		"editorconfig": "0.12.2"
 	},
 	"devDependencies": {
 		"typescript": "^1.6.2",
