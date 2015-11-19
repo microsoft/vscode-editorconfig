@@ -12,7 +12,7 @@ export function activate(ctx: ExtensionContext): void {
     }));
     applyEditorConfigToTextEditor(window.activeTextEditor, documentWatcher);
 
-    // register a command handler to generatoe a .editorconfig file
+    // register a command handler to generate a .editorconfig file
     commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
 }
 
@@ -93,7 +93,14 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
         return;
     }
 
-    let newOptions = Utils.fromEditorConfig(editorconfig, textEditor.options.insertSpaces, textEditor.options.tabSize);
+    let { insertSpaces, tabSize } = textEditor.options;
+    let newOptions = Utils.fromEditorConfig(
+        editorconfig,
+        {
+            insertSpaces,
+            tabSize
+        }
+    );
 
     // console.log('setting ' + textEditor.document.fileName + ' to ' + JSON.stringify(newOptions, null, '\t'));
 
@@ -112,10 +119,10 @@ function generateEditorConfig() {
     }
 
     let editorConfigurationNode = workspace.getConfiguration('editor');
-    let {indent_style, indent_size} = Utils.toEditorConfig(
-        editorConfigurationNode.get<string | boolean>('insertSpaces'),
-        editorConfigurationNode.get<string | number>('tabSize')
-    );
+    let {indent_style, indent_size} = Utils.toEditorConfig({
+        insertSpaces: editorConfigurationNode.get<string | boolean>('insertSpaces'),
+        tabSize: editorConfigurationNode.get<string | number>('tabSize')
+    });
 
     const fileContents =
         `root = true
@@ -144,23 +151,34 @@ indent_size = ${indent_size}
 export class Utils {
 
     /**
-     * Convert .editorsconfig values to vscode editor options
+     * Convert .editorconfig values to vscode editor options
      */
-    public static fromEditorConfig(config:editorconfig.knownProps, defaultInsertSpaces:boolean, defaultTabSize:number): TextEditorOptions {
+    public static fromEditorConfig(
+        config: editorconfig.knownProps,
+        defaults: {
+            insertSpaces: boolean;
+            tabSize: number;
+        }
+    ): TextEditorOptions {
         return {
-            insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : defaultInsertSpaces,
-            tabSize: config.indent_size ? config.indent_size : defaultTabSize
+            insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : defaults.insertSpaces,
+            tabSize: config.indent_size ? config.indent_size : defaults.tabSize
         };
     }
 
     /**
      * Convert vscode editor options to .editorsconfig values
      */
-    public static toEditorConfig(configuredInsertSpaces:boolean|string, configuredTabSize:number|string) {
+    public static toEditorConfig(
+        options: {
+            insertSpaces: boolean|string;
+            tabSize: number|string;
+        }
+    ) {
         let indent_style = 'tab';
         let indent_size = '4';
 
-        switch (configuredInsertSpaces) {
+        switch (options.insertSpaces) {
             case true:
                 indent_style = 'space';
                 break;
@@ -172,13 +190,13 @@ export class Utils {
                 break;
         }
 
-        if (configuredTabSize !== 'auto') {
-            indent_size = String(configuredTabSize);
+        if (options.tabSize !== 'auto') {
+            indent_size = String(options.tabSize);
         }
 
         return {
-            indent_style: indent_style,
-            indent_size: indent_size
+            indent_style,
+            indent_size
         };
     }
 }
