@@ -71,6 +71,12 @@ class DocumentWatcher implements IEditorConfigProvider {
 
         let path = document.fileName;
         editorconfig.parse(path).then((config: editorconfig.knownProps) => {
+            // workaround for the fact that sometimes indent_size is set to "tab":
+            // see https://github.com/editorconfig/editorconfig-core-js/blob/b2e00d96fcf3be242d4bf748829b8e3a778fd6e2/editorconfig.js#L56
+            if (config.indent_size === 'tab') {
+                delete config.indent_size;
+            }
+
             // console.log('storing ' + path + ' to ' + JSON.stringify(config, null, '\t'));
             this._documentToConfigMap[path] = config;
 
