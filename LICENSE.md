@@ -1,8 +1,8 @@
-vscode-editorconfig
+Copyright (c) Microsoft Corporation
 
-The MIT License (MIT)
+All rights reserved.
 
-Copyright (c) Microsoft
+MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
