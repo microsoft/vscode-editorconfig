@@ -4,6 +4,7 @@
 
 * `indent_style`
 * `indent_size`
+* `tab_width`
 
 ## On the backlog
 

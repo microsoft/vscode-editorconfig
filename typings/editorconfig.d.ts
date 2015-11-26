@@ -5,6 +5,7 @@ declare module 'editorconfig' {
         indent_style?: string,
         indent_size?: number,
         insert_final_newline?: boolean,
+        tab_width?: number,
         trim_trailing_whitespace?: boolean,
         charset?: string
     }

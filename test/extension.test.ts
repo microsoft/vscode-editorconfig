@@ -23,6 +23,20 @@ suite('.editorconfig extension', () => {
 			},
 			{
 				config: {
+					indent_style: 'tab',
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
 					indent_style: 'space',
 					indent_size: 5
 				},
@@ -50,6 +64,19 @@ suite('.editorconfig extension', () => {
 			},
 			{
 				config: {
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
 					indent_size: 5
 				},
 				defaults: {
@@ -63,6 +90,19 @@ suite('.editorconfig extension', () => {
 			},
 			{
 				config: {
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: true,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
 					indent_style: 'space'
 				},
 				defaults: {
@@ -85,6 +125,20 @@ suite('.editorconfig extension', () => {
 				expected: {
 					insertSpaces: true,
 					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_size: 'tab',
+					tab_width: 3
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 5
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 3
 				}
 			},
 			{
@@ -133,7 +187,7 @@ suite('.editorconfig extension', () => {
 				},
 				expected: {
 					indent_style: 'tab',
-					indent_size: 6
+					tab_width: 6
 				}
 			},
 			{
@@ -143,7 +197,7 @@ suite('.editorconfig extension', () => {
 				},
 				expected: {
 					indent_style: 'tab',
-					indent_size: 4
+					tab_width: 4
 				}
 			},
 			{
@@ -153,7 +207,7 @@ suite('.editorconfig extension', () => {
 				},
 				expected: {
 					indent_style: 'tab',
-					indent_size: 7
+					tab_width: 7
 				}
 			},
 			{
@@ -163,7 +217,7 @@ suite('.editorconfig extension', () => {
 				},
 				expected: {
 					indent_style: 'tab',
-					indent_size: 4
+					tab_width: 4
 				}
 			}
 		].forEach(({ options, expected }) => {

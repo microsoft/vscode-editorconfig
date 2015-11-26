@@ -119,18 +119,27 @@ function generateEditorConfig() {
     }
 
     let editorConfigurationNode = workspace.getConfiguration('editor');
-    let {indent_style, indent_size} = Utils.toEditorConfig({
+    let settings = Utils.toEditorConfig({
         insertSpaces: editorConfigurationNode.get<string | boolean>('insertSpaces'),
         tabSize: editorConfigurationNode.get<string | number>('tabSize')
     });
 
-    const fileContents =
-        `root = true
+    let fileContents =
+    `root = true
 
 [*]
-indent_style = ${indent_style}
-indent_size = ${indent_size}
 `;
+
+    [
+        'indent_style',
+        'indent_size',
+        'tab_width'
+    ].forEach(setting => {
+        if (settings.hasOwnProperty(setting)) {
+            fileContents += `${setting} = ${settings[setting]}
+`;
+        }
+    });
 
     let editorconfigFile = workspace.rootPath + '/.editorconfig';
     fs.exists(editorconfigFile, (exists) => {
@@ -162,12 +171,12 @@ export class Utils {
     ): TextEditorOptions {
         return {
             insertSpaces: config.indent_style ? (config.indent_style === 'tab' ? false : true) : defaults.insertSpaces,
-            tabSize: config.indent_size ? config.indent_size : defaults.tabSize
+            tabSize: config.tab_width || config.indent_size || defaults.tabSize
         };
     }
 
     /**
-     * Convert vscode editor options to .editorsconfig values
+     * Convert vscode editor options to .editorconfig values
      */
     public static toEditorConfig(
         options: {
@@ -175,28 +184,27 @@ export class Utils {
             tabSize: number|string;
         }
     ) {
-        let indent_style = 'tab';
-        let indent_size = '4';
+        let result: editorconfig.knownProps = {};
 
         switch (options.insertSpaces) {
             case true:
-                indent_style = 'space';
+                result.indent_style = 'space';
+                result.indent_size = Utils.resolveTabSize(options.tabSize);
                 break;
             case false:
-                indent_style = 'tab';
-                break;
             case 'auto':
-                indent_style = 'tab';
+                result.indent_style = 'tab';
+                result.tab_width = Utils.resolveTabSize(options.tabSize);
                 break;
         }
 
-        if (options.tabSize !== 'auto') {
-            indent_size = String(options.tabSize);
-        }
+        return result;
+    }
 
-        return {
-            indent_style,
-            indent_size
-        };
+    /**
+     * Convert vscode tabSize option into numeric value
+     */
+    public static resolveTabSize(tabSize: number|string) {
+        return (tabSize === 'auto') ? 4 : parseInt(tabSize + '', 10);
     }
 }
