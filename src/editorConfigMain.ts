@@ -1,6 +1,7 @@
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
-import {commands, window, workspace, ExtensionContext, TextEditorOptions, TextEditor, TextDocument, Disposable} from 'vscode';
+import {commands, window, workspace, ExtensionContext, TextEditorOptions,
+    TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
 export function activate(ctx: ExtensionContext): void {
 
@@ -41,6 +42,7 @@ class DocumentWatcher implements IEditorConfigProvider {
                 // Saved an .editorconfig file => rebuild map entirely
                 this._rebuildConfigMap();
             }
+            applyOnSaveTransformations(savedDocument, this);
         }));
 
         // dispose event subscriptons upon disposal
@@ -113,6 +115,58 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
     window.setStatusBarMessage('EditorConfig: ' + (newOptions.insertSpaces ? "Spaces:" : "Tabs:") + ' ' + newOptions.tabSize, 1500);
 
     textEditor.options = newOptions;
+}
+
+function applyOnSaveTransformations(
+    textDocument:TextDocument,
+    provider:IEditorConfigProvider): void {
+
+    let editorconfig = provider.getSettingsForDocument(textDocument);
+
+    if (!editorconfig) {
+        // no configuration found for this file
+        return;
+    }
+
+    insertFinalNewlineTransform(editorconfig, textDocument);
+}
+
+function insertFinalNewlineTransform(editorconfig: editorconfig.knownProps, textDocument: TextDocument): void {
+    if (editorconfig.insert_final_newline && textDocument.lineCount > 0) {
+        let lastLine = textDocument.lineAt(textDocument.lineCount - 1);
+        let lastLineLength = lastLine.text.length;
+        if (lastLineLength < 1) {
+            return;
+        }
+        let editor = findEditor(textDocument);
+        if (!editor) {
+            return;
+        }
+        editor.edit(edit => {
+            let pos = new Position(lastLine.lineNumber, lastLineLength);
+            edit.insert(pos, newline(editorconfig));
+            textDocument.save();
+        });
+    }
+}
+
+function newline(editorconfig: editorconfig.knownProps): string {
+    if (editorconfig.end_of_line === 'cr') {
+        return '\r';
+    } else if (editorconfig.end_of_line == 'crlf') {
+        return '\r\n';
+    }
+    return '\n';
+}
+
+function findEditor(textDocument: TextDocument): TextEditor {
+    for (let editor of window.visibleTextEditors) {
+        if (editor.document === textDocument) {
+            return editor;
+        }
+    }
+
+    return null;
 }
 
 /**
