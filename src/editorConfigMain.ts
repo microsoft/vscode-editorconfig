@@ -131,7 +131,10 @@ function applyOnSaveTransformations(
     insertFinalNewlineTransform(editorconfig, textDocument);
 }
 
-function insertFinalNewlineTransform(editorconfig: editorconfig.knownProps, textDocument: TextDocument): void {
+function insertFinalNewlineTransform(
+    editorconfig: editorconfig.knownProps,
+    textDocument: TextDocument): void {
+
     if (editorconfig.insert_final_newline && textDocument.lineCount > 0) {
         let lastLine = textDocument.lineAt(textDocument.lineCount - 1);
         let lastLineLength = lastLine.text.length;
@@ -144,9 +147,8 @@ function insertFinalNewlineTransform(editorconfig: editorconfig.knownProps, text
         }
         editor.edit(edit => {
             let pos = new Position(lastLine.lineNumber, lastLineLength);
-            edit.insert(pos, newline(editorconfig));
-            textDocument.save();
-        });
+            return edit.insert(pos, newline(editorconfig));
+        }).then(() => textDocument.save());
     }
 }
 
