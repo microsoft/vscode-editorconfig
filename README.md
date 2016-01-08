@@ -10,6 +10,7 @@ ext install vscodeEditorConfig
 
 * `indent_style`
 * `indent_size`
+* `insert_final_newline`
 
 ## On the backlog
 
