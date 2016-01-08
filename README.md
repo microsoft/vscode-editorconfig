@@ -1,5 +1,11 @@
 # Editor Config for Visual Studio Code
 
+## Installation
+
+```
+ext install vscodeEditorConfig
+```
+
 ##Supported Properties
 
 * `indent_style`
