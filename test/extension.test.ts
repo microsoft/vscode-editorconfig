@@ -2,25 +2,226 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {Utils} from '../src/editorConfigMain';
 
-suite(".editorconfig extension", () => {
+suite('.editorconfig extension', () => {
 
 	// Defines a Mocha unit test
-	test("Utils.fromEditorConfig", () => {
-		assert.deepEqual(Utils.fromEditorConfig({ indent_style: 'tab', indent_size: 5 }, false, 4), { insertSpaces: false, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ indent_style: 'space', indent_size: 5 }, false, 4), { insertSpaces: true, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ indent_size: 5 }, false, 4), { insertSpaces: false, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ indent_size: 5 }, true, 4), { insertSpaces: true, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ indent_style: 'space' }, false, 4), { insertSpaces: true, tabSize: 4 });
-		assert.deepEqual(Utils.fromEditorConfig({ indent_style: 'space' }, false, 5), { insertSpaces: true, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ }, false, 5), { insertSpaces: false, tabSize: 5 });
-		assert.deepEqual(Utils.fromEditorConfig({ }, true, 4), { insertSpaces: true, tabSize: 4 });
+	test('Utils.fromEditorConfig', () => {
+		[
+			{
+				config: {
+					indent_style: 'tab',
+					indent_size: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_style: 'tab',
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_style: 'space',
+					indent_size: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_size: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_size: 5
+				},
+				defaults: {
+					insertSpaces: true,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					tab_width: 5
+				},
+				defaults: {
+					insertSpaces: true,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_style: 'space'
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 4
+				}
+			},
+			{
+				config: {
+					indent_style: 'space'
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 5
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 5
+				}
+			},
+			{
+				config: {
+					indent_size: 'tab',
+					tab_width: 3
+				},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 5
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 3
+				}
+			},
+			{
+				config: {},
+				defaults: {
+					insertSpaces: false,
+					tabSize: 5
+				},
+				expected: {
+					insertSpaces: false,
+					tabSize: 5
+				}
+			},
+			{
+				config: {},
+				defaults: {
+					insertSpaces: true,
+					tabSize: 4
+				},
+				expected: {
+					insertSpaces: true,
+					tabSize: 4
+				}
+			}
+		].forEach(({ config, defaults, expected }) => {
+			assert.deepEqual(Utils.fromEditorConfig.call(this, config, defaults), expected);
+		});
 	});
 
-	test("Utils.toEditorConfig", () => {
-		assert.deepEqual(Utils.toEditorConfig(true, 5), { indent_style: 'space', indent_size: 5 });
-		assert.deepEqual(Utils.toEditorConfig(false, 6), { indent_style: 'tab', indent_size: 6 });
-		assert.deepEqual(Utils.toEditorConfig(false, 'auto'), { indent_style: 'tab', indent_size: 4 });
-		assert.deepEqual(Utils.toEditorConfig('auto', 7), { indent_style: 'tab', indent_size: 7 });
-		assert.deepEqual(Utils.toEditorConfig('auto', 'auto'), { indent_style: 'tab', indent_size: 4 });
+	test('Utils.toEditorConfig', () => {
+		[
+			{
+				options: {
+					insertSpaces: true,
+					tabSize: 5
+				},
+				expected: {
+					indent_style: 'space',
+					indent_size: 5
+				}
+			},
+			{
+				options: {
+					insertSpaces: false,
+					tabSize: 6
+				},
+				expected: {
+					indent_style: 'tab',
+					tab_width: 6
+				}
+			},
+			{
+				options: {
+					insertSpaces: false,
+					tabSize: 'auto'
+				},
+				expected: {
+					indent_style: 'tab',
+					tab_width: 4
+				}
+			},
+			{
+				options: {
+					insertSpaces: 'auto',
+					tabSize: 7
+				},
+				expected: {
+					indent_style: 'tab',
+					tab_width: 7
+				}
+			},
+			{
+				options: {
+					insertSpaces: 'auto',
+					tabSize: 'auto'
+				},
+				expected: {
+					indent_style: 'tab',
+					tab_width: 4
+				}
+			}
+		].forEach(({ options, expected }) => {
+			assert.deepEqual(Utils.toEditorConfig.call(this, options), expected);
+		});
 	});
 });
