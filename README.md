@@ -12,10 +12,10 @@ ext install vscodeEditorConfig
 * `indent_size`
 * `tab_width`
 * `insert_final_newline`
+* `trim_trailing_whitespace`
 
 ## On the backlog
 
 * `charset`
 * `end_of_line`
-* `trim_trailing_whitespace`
 
