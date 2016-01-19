@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import {commands, window, workspace, ExtensionContext, TextEditorOptions,
     TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
+let defaults;
+
 export function activate(ctx: ExtensionContext): void {
 
     let documentWatcher = new DocumentWatcher();
@@ -93,6 +95,10 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
         return;
     }
 
+    if (!defaults) {
+        defaults = textEditor.options;
+    }
+
     let doc = textEditor.document;
     let editorconfig = provider.getSettingsForDocument(doc);
 
@@ -101,7 +107,7 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
         return;
     }
 
-    let { insertSpaces, tabSize } = textEditor.options;
+    let { insertSpaces, tabSize } = defaults;
     let newOptions = Utils.fromEditorConfig(
         editorconfig,
         {
