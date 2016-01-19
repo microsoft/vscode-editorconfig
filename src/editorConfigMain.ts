@@ -16,7 +16,7 @@ import {
 
 export function activate(ctx: ExtensionContext): void {
 
-	let documentWatcher = new DocumentWatcher();
+	const documentWatcher = new DocumentWatcher();
 
 	ctx.subscriptions.push(documentWatcher);
 	ctx.subscriptions.push(window.onDidChangeActiveTextEditor((textEditor) => {
@@ -42,7 +42,7 @@ class DocumentWatcher implements IEditorConfigProvider {
 
 	constructor() {
 
-		let subscriptions: Disposable[] = []
+		const subscriptions: Disposable[] = []
 
 		// Listen for new documents being openend
 		subscriptions.push(workspace.onDidOpenTextDocument(
@@ -88,7 +88,7 @@ class DocumentWatcher implements IEditorConfigProvider {
 			return;
 		}
 
-		let path = document.fileName;
+		const path = document.fileName;
 		editorconfig.parse(path).then((config: editorconfig.knownProps) => {
 			if (config.indent_size === 'tab') {
 				config.indent_size = config.tab_width;
@@ -111,16 +111,16 @@ function applyEditorConfigToTextEditor(
 		return;
 	}
 
-	let doc = textEditor.document;
-	let editorconfig = provider.getSettingsForDocument(doc);
+	const doc = textEditor.document;
+	const editorconfig = provider.getSettingsForDocument(doc);
 
 	if (!editorconfig) {
 		// no configuration found for this file
 		return;
 	}
 
-	let { insertSpaces, tabSize } = textEditor.options;
-	let newOptions = Utils.fromEditorConfig(
+	const { insertSpaces, tabSize } = textEditor.options;
+	const newOptions = Utils.fromEditorConfig(
 		editorconfig,
 		{
 			insertSpaces,
@@ -144,7 +144,7 @@ function applyOnSaveTransformations(
 	provider:IEditorConfigProvider
 ): void {
 
-	let editorconfig = provider.getSettingsForDocument(textDocument);
+	const editorconfig = provider.getSettingsForDocument(textDocument);
 
 	if (!editorconfig) {
 		// no configuration found for this file
@@ -164,19 +164,19 @@ function insertFinalNewlineTransform(
 		return;
 	}
 
-	let lastLine = textDocument.lineAt(lineCount - 1);
-	let lastLineLength = lastLine.text.length;
+	const lastLine = textDocument.lineAt(lineCount - 1);
+	const lastLineLength = lastLine.text.length;
 	if (lastLineLength < 1) {
 		return;
 	}
 
-	let editor = findEditor(textDocument);
+	const editor = findEditor(textDocument);
 	if (!editor) {
 		return;
 	}
 
 	editor.edit(edit => {
-		let pos = new Position(lastLine.lineNumber, lastLineLength);
+		const pos = new Position(lastLine.lineNumber, lastLineLength);
 		return edit.insert(pos, newline(editorconfig));
 	}).then(() => textDocument.save());
 }
@@ -189,7 +189,7 @@ function newline(editorconfig: editorconfig.knownProps): string {
 }
 
 function findEditor(textDocument: TextDocument): TextEditor {
-	for (let editor of window.visibleTextEditors) {
+	for (const editor of window.visibleTextEditors) {
 		if (editor.document === textDocument) {
 			return editor;
 		}
@@ -209,8 +209,8 @@ function generateEditorConfig() {
 		return;
 	}
 
-	let editorConfigurationNode = workspace.getConfiguration('editor');
-	let settings = Utils.toEditorConfig({
+	const editorConfigurationNode = workspace.getConfiguration('editor');
+	const settings = Utils.toEditorConfig({
 		insertSpaces: editorConfigurationNode
 			.get<string | boolean>('insertSpaces'),
 		tabSize: editorConfigurationNode
@@ -281,7 +281,7 @@ export class Utils {
 			tabSize: number|string;
 		}
 	) {
-		let result: editorconfig.knownProps = {};
+		const result: editorconfig.knownProps = {};
 
 		switch (options.insertSpaces) {
 			case true:
