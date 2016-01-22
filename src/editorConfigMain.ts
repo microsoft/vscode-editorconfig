@@ -4,14 +4,7 @@ import {commands, window, workspace, ExtensionContext, TextEditorOptions,
     TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
 export function activate(ctx: ExtensionContext): void {
-
-    let documentWatcher = new DocumentWatcher();
-
-    ctx.subscriptions.push(documentWatcher);
-    ctx.subscriptions.push(window.onDidChangeActiveTextEditor((textEditor) => {
-        applyEditorConfigToTextEditor(textEditor, documentWatcher);
-    }));
-    applyEditorConfigToTextEditor(window.activeTextEditor, documentWatcher);
+    ctx.subscriptions.push(new DocumentWatcher());
 
     // register a command handler to generate a .editorconfig file
     commands.registerCommand('vscode.generateeditorconfig', generateEditorConfig);
@@ -31,10 +24,14 @@ class DocumentWatcher implements IEditorConfigProvider {
 
     constructor() {
 
-        let subscriptions: Disposable[] = []
+        let subscriptions: Disposable[] = [];
 
-        // Listen for new documents being openend
-        subscriptions.push(workspace.onDidOpenTextDocument((doc) => this._onDidOpenDocument(doc)));
+        // Listen for changes in the active text editor
+        subscriptions.push(window.onDidChangeActiveTextEditor(textEditor => {
+            if (textEditor && textEditor.document) {
+                this._onDidOpenDocument(textEditor.document);
+            }
+        }));
 
         // Listen for saves to ".editorconfig" files and rebuild the map
         subscriptions.push(workspace.onDidSaveTextDocument(savedDocument => {
@@ -72,6 +69,12 @@ class DocumentWatcher implements IEditorConfigProvider {
         }
 
         let path = document.fileName;
+
+        if (this._documentToConfigMap[path]) {
+            applyEditorConfigToTextEditor(window.activeTextEditor, this);
+            return;
+        }
+
         editorconfig.parse(path).then((config: editorconfig.knownProps) => {
             // workaround for the fact that sometimes indent_size is set to "tab":
             // see https://github.com/editorconfig/editorconfig-core-js/blob/b2e00d96fcf3be242d4bf748829b8e3a778fd6e2/editorconfig.js#L56
