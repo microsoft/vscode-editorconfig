@@ -1,7 +1,7 @@
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
 import {commands, window, workspace, ExtensionContext, TextEditorOptions,
-    TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
+    TextEditor, TextEdit, TextDocument, Disposable, Position, Range} from 'vscode';
 
 export function activate(ctx: ExtensionContext): void {
 
@@ -128,11 +128,18 @@ function applyOnSaveTransformations(
         return;
     }
 
-    insertFinalNewlineTransform(editorconfig, textDocument);
+    let editor = findEditor(textDocument);
+    if (!editor) {
+        return;
+    }
+
+    insertFinalNewlineTransform(editorconfig, editor, textDocument);
+    trimTrailingWhitespaceTransform(editorconfig, editor, textDocument);
 }
 
 function insertFinalNewlineTransform(
     editorconfig: editorconfig.knownProps,
+    editor: TextEditor,
     textDocument: TextDocument): void {
 
     if (editorconfig.insert_final_newline && textDocument.lineCount > 0) {
@@ -141,15 +148,41 @@ function insertFinalNewlineTransform(
         if (lastLineLength < 1) {
             return;
         }
-        let editor = findEditor(textDocument);
-        if (!editor) {
-            return;
-        }
         editor.edit(edit => {
             let pos = new Position(lastLine.lineNumber, lastLineLength);
             return edit.insert(pos, newline(editorconfig));
         }).then(() => textDocument.save());
     }
+}
+
+function trimTrailingWhitespaceTransform(
+    editorconfig: editorconfig.knownProps,
+    editor: TextEditor,
+    textDocument: TextDocument): void {
+
+    let editorAlreadyTrimsWhitespace = workspace.getConfiguration('files')['trimTrailingWhitespace'];
+    let nothingToDo = !editorconfig.trim_trailing_whitespace || editorAlreadyTrimsWhitespace;
+
+    if (nothingToDo) {
+        return;
+    }
+
+    for(let i = 0; i < textDocument.lineCount; i++) {
+        var line = textDocument.lineAt(i);
+        var trimmedLine = trimTrailingWhitespace(line.text);
+        if (trimmedLine !== line.text) {
+            editor.edit(edit => {
+                let whitespaceBegin = new Position(line.lineNumber, trimmedLine.length);
+                let whitespaceEnd = new Position(line.lineNumber, line.text.length);
+                let whitespace = new Range(whitespaceBegin, whitespaceEnd);
+                edit.delete(whitespace);
+            }).then(() => textDocument.save());
+        }
+    }
+}
+
+function trimTrailingWhitespace(input: string): string {
+    return input.replace(/[\s\uFEFF\xA0]+$/g, '');
 }
 
 function newline(editorconfig: editorconfig.knownProps): string {
