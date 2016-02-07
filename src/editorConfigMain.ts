@@ -167,7 +167,6 @@ function trimTrailingWhitespaceTransform(
         return;
     }
 
-    let trailingWhitespaceRegex = new RegExp('/(\s)$/');
     for(let i = 0; i < textDocument.lineCount; i++) {
         var line = textDocument.lineAt(i);
         var trimmedLine = trimTrailingWhitespace(line.text);
