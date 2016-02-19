@@ -1,7 +1,7 @@
 {
 	"name": "vscodeEditorConfig",
 	"displayName": "Editor Config for VS Code",
-	"description": "Editor Config Support for Visual Studio Code",
+	"description": "[DEPRECATED] Editor Config Support for Visual Studio Code",
 	"publisher": "chrisdias",
 	"version": "0.1.4",
 	"icon": "./EditorConfig_icon.png",
