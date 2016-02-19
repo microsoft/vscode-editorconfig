@@ -3,7 +3,15 @@ import * as fs from 'fs';
 import {commands, window, workspace, ExtensionContext, TextEditorOptions,
     TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
+var open = require('open');
+
 export function activate(ctx: ExtensionContext): void {
+
+    window.showInformationMessage("This version of EditorConfig has been deprecated, more information is available online.","How to Upgrade").then(selection =>{
+        if (selection) {
+            open("https://marketplace.visualstudio.com/items?itemName=chrisdias.vscodeEditorConfig");
+        }
+    });
 
     let documentWatcher = new DocumentWatcher();
 
