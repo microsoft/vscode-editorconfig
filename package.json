@@ -1,9 +1,9 @@
 {
 	"name": "vscodeEditorConfig",
 	"displayName": "Editor Config for VS Code",
-	"description": "DEPRECATED - Editor Config Support for Visual Studio Code",
+	"description": "DEPRECATED - See Read Me for more information",
 	"publisher": "chrisdias",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"icon": "./EditorConfig_icon.png",
 	"engines": {
 		"vscode": "^0.10.1"

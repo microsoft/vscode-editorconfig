@@ -1,17 +1,21 @@
 import * as editorconfig from 'editorconfig';
 import * as fs from 'fs';
 import {commands, window, workspace, ExtensionContext, TextEditorOptions,
-    TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
+TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
 var open = require('open');
 
 export function activate(ctx: ExtensionContext): void {
 
-    window.showInformationMessage("This version of EditorConfig has been deprecated, more information is available online.","How to Upgrade").then(selection =>{
-        if (selection) {
-            open("https://marketplace.visualstudio.com/items?itemName=chrisdias.vscodeEditorConfig");
-        }
-    });
+    if (ctx.globalState.get('chrisdias.vscodeEditorConfig.informUser', true)) {
+        window.showInformationMessage("This version of EditorConfig has been deprecated, more information is available online.", "How to Upgrade").then(selection => {
+            if (selection) {
+                open("https://marketplace.visualstudio.com/items?itemName=chrisdias.vscodeEditorConfig");
+            }
+        });
+        // only prompt one time
+        ctx.globalState.update('chrisdias.vscodeEditorConfig.informUser', false);
+    }
 
     let documentWatcher = new DocumentWatcher();
 
@@ -95,7 +99,7 @@ class DocumentWatcher implements IEditorConfigProvider {
     }
 }
 
-function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorConfigProvider): void {
+function applyEditorConfigToTextEditor(textEditor: TextEditor, provider: IEditorConfigProvider): void {
     if (!textEditor) {
         // No more open editors
         return;
@@ -126,8 +130,8 @@ function applyEditorConfigToTextEditor(textEditor:TextEditor, provider:IEditorCo
 }
 
 function applyOnSaveTransformations(
-    textDocument:TextDocument,
-    provider:IEditorConfigProvider): void {
+    textDocument: TextDocument,
+    provider: IEditorConfigProvider): void {
 
     let editorconfig = provider.getSettingsForDocument(textDocument);
 
@@ -195,7 +199,7 @@ function generateEditorConfig() {
     });
 
     let fileContents =
-    `root = true
+        `root = true
 
 [*]
 `;
@@ -250,8 +254,8 @@ export class Utils {
      */
     public static toEditorConfig(
         options: {
-            insertSpaces: boolean|string;
-            tabSize: number|string;
+            insertSpaces: boolean | string;
+            tabSize: number | string;
         }
     ) {
         let result: editorconfig.knownProps = {};
@@ -274,7 +278,7 @@ export class Utils {
     /**
      * Convert vscode tabSize option into numeric value
      */
-    public static resolveTabSize(tabSize: number|string) {
+    public static resolveTabSize(tabSize: number | string) {
         return (tabSize === 'auto') ? 4 : parseInt(tabSize + '', 10);
     }
 }
