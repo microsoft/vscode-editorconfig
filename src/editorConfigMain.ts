@@ -5,6 +5,8 @@ TextEditor, TextEdit, TextDocument, Disposable, Position} from 'vscode';
 
 var open = require('open');
 
+let defaults;
+
 export function activate(ctx: ExtensionContext): void {
 
     if (ctx.globalState.get('chrisdias.vscodeEditorConfig.informUser', true)) {
@@ -105,6 +107,10 @@ function applyEditorConfigToTextEditor(textEditor: TextEditor, provider: IEditor
         return;
     }
 
+    if (!defaults) {
+        defaults = textEditor.options;
+    }
+
     let doc = textEditor.document;
     let editorconfig = provider.getSettingsForDocument(doc);
 
@@ -113,7 +119,7 @@ function applyEditorConfigToTextEditor(textEditor: TextEditor, provider: IEditor
         return;
     }
 
-    let { insertSpaces, tabSize } = textEditor.options;
+    let { insertSpaces, tabSize } = defaults;
     let newOptions = Utils.fromEditorConfig(
         editorconfig,
         {
